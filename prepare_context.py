@@ -1,14 +1,14 @@
 """
 prepare_context.py
 
-This script processes all .eml files in the ./emails_raw/ directory and its subfolders, extracts metadata and clean text, chunks the text for LLM context, and writes structured context files to ./emails_context/.
+This script processes all .eml files in the ./emails_raw/ directory and its subfolders, extracts metadata and clean text, chunks the text for LLM context, and writes structured context files to ./emails_context/, grouped by week (sent or received date).
 
 USAGE:
 1. Place your .eml files into the ./emails_raw/ folder (must exist in the workspace root). Subfolders are supported.
 2. Run the script: python prepare_context.py
    - By default, only new emails (not yet processed) are parsed.
    - To force a full reset and re-parse all emails, run: python prepare_context.py --reset
-3. The script will create ./emails_context/ (if it doesn't exist) and write output files there.
+3. The script will create ./emails_context/ (if it doesn't exist) and write output files there, grouped by week (e.g. ./emails_context/2025,week46/).
 4. Ask the AI agent a question by referencing the generated context files in ./emails_context/.
 
 Dependencies: Only standard Python libraries are used. If you encounter issues with HTML parsing, consider installing beautifulsoup4 for more robust handling.
@@ -20,6 +20,7 @@ import email
 from email import policy
 from email.parser import BytesParser
 import sys
+import datetime
 
 RAW_DIR = './emails_raw'
 CONTEXT_DIR = './emails_context'
@@ -125,9 +126,26 @@ def split_into_chunks(text):
                 chunks.append(chunk)
     return chunks
 
-def write_context_file(metadata, chunks, rel_filename):
+def get_year_week(date_str):
+    """
+    Parse the email date string and return (YYYY, weekWW) as strings.
+    If parsing fails, fallback to 'unknown'.
+    """
+    try:
+        # Try parsing with email.utils
+        from email.utils import parsedate_to_datetime
+        dt = parsedate_to_datetime(date_str)
+        iso_year, iso_week, _ = dt.isocalendar()
+        return f"{iso_year}", f"week{iso_week:02d}"
+    except Exception:
+        return "unknown", "week00"
+
+def write_context_file(metadata, chunks, rel_filename, year, week):
+    week_dir = os.path.join(CONTEXT_DIR, f"{year},{week}")
+    if not os.path.exists(week_dir):
+        os.makedirs(week_dir)
     out_filename = context_filename(rel_filename)
-    out_path = os.path.join(CONTEXT_DIR, out_filename)
+    out_path = os.path.join(week_dir, out_filename)
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(f"# EMAIL CONTEXT: {rel_filename}\n\n")
         f.write("## Metadata\n")
@@ -147,7 +165,8 @@ def process_eml_file(full_path, rel_filename):
     body = extract_body(msg)
     clean_body = clean_text(body)
     chunks = split_into_chunks(clean_body)
-    write_context_file(metadata, chunks, rel_filename)
+    year, week = get_year_week(metadata['Date'])
+    write_context_file(metadata, chunks, rel_filename, year, week)
 
 def main():
     ensure_directories()
@@ -165,15 +184,21 @@ def main():
     processed = 0
     skipped = 0
     for full_path, rel_filename in eml_files:
+        # Determine year/week for output path
+        with open(full_path, 'rb') as f:
+            msg = BytesParser(policy=policy.default).parse(f)
+        metadata = extract_metadata(msg, rel_filename)
+        year, week = get_year_week(metadata['Date'])
+        week_dir = os.path.join(CONTEXT_DIR, f"{year},{week}")
         out_filename = context_filename(rel_filename)
-        out_path = os.path.join(CONTEXT_DIR, out_filename)
+        out_path = os.path.join(week_dir, out_filename)
         if not reset_mode and os.path.exists(out_path):
             print(f"Skipped (already processed): {rel_filename}")
             skipped += 1
             continue
         try:
             process_eml_file(full_path, rel_filename)
-            print(f"Processed: {rel_filename}")
+            print(f"Processed: {rel_filename} -> {year},{week}/")
             processed += 1
         except Exception as e:
             print(f"Error processing {rel_filename}: {e}")
