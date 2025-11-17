@@ -3,11 +3,12 @@
 ## Architecture Overview
 - **Input Layer**: Raw EML files are placed in the `emails_raw/` directory (supports subfolders).
 - **Processing Layer**: The `prepare_context.py` script parses each EML file, extracts metadata and clean text, applies cleaning and chunking logic, and generates a Markdown context file.
-- **Output Layer**: Structured context files are written to `emails_context/`, one per email, using a consistent naming convention.
+- **Output Layer**: Structured context files are written to `emails_context/`, grouped in subfolders by week (e.g. `emails_context/2025,week46/`), one per email, using a consistent naming convention.
 
 ## Key Patterns and Workflows
 - **Incremental Processing**: On each run, only new emails (those without a corresponding context file) are processed, enabling efficient updates.
 - **Reset Mode**: By running the script with `--reset`, all emails are reprocessed and context files are regenerated, ensuring a clean state.
+- **Weekly Grouping**: Each context file is saved in a subfolder named by year and ISO week (e.g. `2025,week46`), based on the sent or received date of the email. This enables fast retrieval and analysis by time range.
 - **Chunking Strategy**: Email body text is split into logical chunks (paragraphs, sentences) to fit LLM context windows, preserving readability and semantic boundaries.
 - **Metadata Extraction**: Each context file includes standardized metadata (ID, sender, subject, date) for traceability and search.
 - **Markdown Output**: Context files use Markdown headers and chunk delimiters for easy parsing by agents and LLMs.
