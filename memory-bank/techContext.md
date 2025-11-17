@@ -1,15 +1,24 @@
 # Tech Context: Email Context Agent
 
 ## Technologies Used
-- **Language**: Python 3.x
+- **Language**: Python 3.x (Python 3 must be installed on the user system; see README for setup instructions)
 - **Libraries**: Only standard Python libraries (os, re, email, sys, etc.) are used for maximum portability and ease of setup.
 - **Optional**: For more robust HTML parsing, users may install `beautifulsoup4` (not required for baseline functionality).
 
 ## Development Setup
 - Place raw EML files in the `emails_raw/` directory.
 - Run the main script (`prepare_context.py`) from the repository root.
-- Output context files are generated in the `emails_context/` directory.
+- Output context files are generated in the `emails_context/` directory, grouped in subfolders by week (e.g. `emails_context/2025,week46/`).
 - No external dependencies required for core functionality; install `beautifulsoup4` only if needed.
+- **Recommended:** Use a Python virtual environment to keep dependencies isolated:
+  ```
+  python3 -m venv .venv
+  source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+  ```
+
+## Output Structure
+- Context files are now grouped in subfolders by week, based on the sent or received date of each email. For example: `emails_context/2025,week46/[filename]_context.txt`.
+- This structure enables fast retrieval and analysis by time range.
 
 ## Technical Constraints
 - No email content is stored in the memory bank; all content is in context files.
