@@ -41,18 +41,6 @@ Before using this Email Assistant, make sure your environment meets the followin
 
 ---
 
-## Important: Axet Plugin Setup
-
-This Email Assistant is designed to be used with the Axet Plugin.
-
-**Before using the agent, you MUST:**
-- Open the file `memory-bank-system-prompt` in this repository.
-- Copy its entire content into the "Custom Instruction" section of the Axet Plugin Settings.
-
-This step is mandatory for the correct execution and behavior of the agent.
-
----
-
 ## Quick Start
 
 This repository provides an agent to help you parse, preprocess, and analyze email files (EML format) for search and LLM-based question answering.  
