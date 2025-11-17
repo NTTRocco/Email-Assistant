@@ -5,7 +5,8 @@ This repository provides an agent to help you parse, preprocess, and analyze ema
 ## How to Use
 
 1. **Add Your Emails**
-   - Place your `.eml` files in the `emails_raw/` folder (subfolders are supported).
+   - Simply drag and drop the selected emails from Outlook into the `emails_raw/` folder using Finder (on Mac) or File Explorer (on Windows). This will automatically export them as `.eml` files.
+   - Alternatively, you can manually place your `.eml` files in the `emails_raw/` folder (subfolders are supported).
 
 2. **Run the Agent**
    - From the repository root, run:
