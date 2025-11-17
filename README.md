@@ -26,6 +26,16 @@ This repository provides an agent to help you parse, preprocess, and analyze ema
    - Use the files in `emails_context/` as the source for any search, analysis, or LLM-based queries.
    - The agent and LLMs will always use this folder to find and extract relevant information.
 
+## Example Questions
+
+Here are some example questions you can ask the agent (the answer will always be based on the content of the files in `emails_context/`):
+
+- "Which emails mention the project EXT-304292-12345?"
+- "Show me all emails sent by alice@example.com in November 2025."
+- "What is the subject and main content of the email with ID `2025,week46__Deep Dive necessario sull’adozione della GenAI nei progetti_context.txt`?"
+- "Please summarize the activitues related the GenAI adoption."
+- "Find the chunk where the sender requests a meeting about AI compliance."
+
 ## Documentation
 
 - For full details on system logic, architecture, and best practices, see the `memory-bank/` folder.
