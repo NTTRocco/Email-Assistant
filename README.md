@@ -83,6 +83,11 @@ Here are some example questions you can ask the agent (the answer will always be
 - "Please summarize the activitues related the GenAI adoption."
 - "Find the chunk where the sender requests a meeting about AI compliance."
 
+## Custom Logic & Automation
+
+To optimize answers on large volumes of data, the agent can automatically generate and run custom Python scripts when needed.  
+This allows the agent to efficiently process, analyze, and summarize information from your emails, ensuring accurate and scalable results without manual intervention.
+
 ## Documentation
 
 - For full details on system logic, architecture, and best practices, see the `memory-bank/` folder.
