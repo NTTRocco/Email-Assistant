@@ -1,5 +1,46 @@
 # Email Context Agent
 
+## Pre-requisites
+
+Before using this Email Assistant, make sure your environment meets the following requirements:
+
+### 1. Axet Plugin Setup (Mandatory)
+- Install the Axet Plugin in your VSCode environment.
+- Open the file `memory-bank-system-prompt` in this repository.
+- Copy its entire content into the "Custom Instruction" section of the Axet Plugin Settings.
+
+### 2. Python 3 Installation (Mandatory)
+- This agent requires Python 3 to run the context preparation script.
+- **Check if Python 3 is installed:**  
+  Open a terminal and run:
+  ```
+  python3 --version
+  ```
+  If you see a version number (e.g., Python 3.10.0), you are ready.
+- **If not installed:**  
+  - [Download Python 3 from the official website](https://www.python.org/downloads/)
+  - Or install via terminal:
+    - **macOS:**  
+      ```
+      brew install python
+      ```
+    - **Ubuntu/Linux:**  
+      ```
+      sudo apt update
+      sudo apt install python3
+      ```
+    - **Windows:**  
+      Download and run the installer from [python.org](https://www.python.org/downloads/windows/)
+
+### 3. (Optional) Create a Virtual Environment
+- To keep dependencies isolated, you can use a Python virtual environment:
+  ```
+  python3 -m venv .venv
+  source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+  ```
+
+---
+
 ## Important: Axet Plugin Setup
 
 This Email Assistant is designed to be used with the Axet Plugin.
@@ -23,16 +64,18 @@ This repository provides an agent to help you parse, preprocess, and analyze ema
    - Simply drag and drop the selected emails from Outlook into the `emails_raw/` folder using Finder (on Mac) or File Explorer (on Windows). This will automatically export them as `.eml` files.
    - Alternatively, you can manually place your `.eml` files in the `emails_raw/` folder (subfolders are supported).
 
-2. **Run the Agent**
-   - From the repository root, run:
-     ```
-     python3 prepare_context.py
-     ```
-   - By default, only new emails are processed.  
-   - To reprocess all emails (reset), run:
-     ```
-     python3 prepare_context.py --reset
-     ```
+2. **Prepare the Context**
+   - You can run the parsing process in two ways:
+     - **Recommended:** Simply type `prepare context` in the Axet Plugin input prompt. The agent will automatically run the Python script in the VSCode terminal and prepare the context for you.
+     - **Manual:** From the repository root, run:
+       ```
+       python3 prepare_context.py
+       ```
+     - By default, only new emails are processed.  
+     - To reprocess all emails (reset), run:
+       ```
+       python3 prepare_context.py --reset
+       ```
 
 3. **Find Results**
    - Processed email context files are saved in the `emails_context/` folder, **organized in subfolders by week** (e.g. `emails_context/2025,week46/`).
@@ -60,3 +103,4 @@ Here are some example questions you can ask the agent (the answer will always be
 **Note:**  
 - The agent never stores email content outside of `emails_context/`.
 - All analysis and evidence must come from the files in `emails_context/`.
+- You can always trigger the context preparation by simply asking the agent: `prepare context`.
