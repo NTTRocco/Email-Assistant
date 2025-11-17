@@ -1,9 +1,7 @@
 # Email Context Agent
-## Quick Start
-
-This repository provides an agent to help you parse, preprocess, and analyze email files (EML format) for search and LLM-based question answering.
 
 ## Important: Axet Plugin Setup
+
 This Email Assistant is designed to be used with the Axet Plugin.
 
 **Before using the agent, you MUST:**
@@ -11,7 +9,13 @@ This Email Assistant is designed to be used with the Axet Plugin.
 - Copy its entire content into the "Custom Instruction" section of the Axet Plugin Settings.
 
 This step is mandatory for the correct execution and behavior of the agent.
+
 ---
+
+## Quick Start
+
+This repository provides an agent to help you parse, preprocess, and analyze email files (EML format) for search and LLM-based question answering.  
+**The parsing process will also organize the context files by week, making it easy to retrieve emails for a specific time range.**
 
 ## How to Use
 
@@ -31,7 +35,7 @@ This step is mandatory for the correct execution and behavior of the agent.
      ```
 
 3. **Find Results**
-   - Processed email context files are saved in the `emails_context/` folder.
+   - Processed email context files are saved in the `emails_context/` folder, **organized in subfolders by week** (e.g. `emails_context/2025,week46/`).
    - Each file contains clean, chunked text and metadata for easy analysis.
 
 4. **Ask Questions**
