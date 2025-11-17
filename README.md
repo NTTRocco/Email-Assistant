@@ -41,22 +41,6 @@ Before using this Email Assistant, make sure your environment meets the followin
 
 ---
 
-## Custom Logic Scripts
-
-All custom scripts generated for advanced analysis or reporting (e.g., weekly email stats, custom queries) are placed in the `custom logic/` folder.  
-This ensures a clear separation between the core codebase and any additional, user-driven analytics or reporting logic.
-
-- To run a custom script, use:
-  ```
-  python3 "custom logic/name_of_script.py"
-  ```
-- Example:  
-  ```
-  python3 "custom logic/report_email_stats.py"
-  ```
-
----
-
 ## Important: Axet Plugin Setup
 
 This Email Assistant is designed to be used with the Axet Plugin.
