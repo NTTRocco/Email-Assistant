@@ -1,0 +1,36 @@
+# Email Context Agent – Quick Start
+
+This repository provides an agent to help you parse, preprocess, and analyze email files (EML format) for search and LLM-based question answering.
+
+## How to Use
+
+1. **Add Your Emails**
+   - Place your `.eml` files in the `emails_raw/` folder (subfolders are supported).
+
+2. **Run the Agent**
+   - From the repository root, run:
+     ```
+     python3 prepare_context.py
+     ```
+   - By default, only new emails are processed.  
+   - To reprocess all emails (reset), run:
+     ```
+     python3 prepare_context.py --reset
+     ```
+
+3. **Find Results**
+   - Processed email context files are saved in the `emails_context/` folder.
+   - Each file contains clean, chunked text and metadata for easy analysis.
+
+4. **Ask Questions**
+   - Use the files in `emails_context/` as the source for any search, analysis, or LLM-based queries.
+   - The agent and LLMs will always use this folder to find and extract relevant information.
+
+## Documentation
+
+- For full details on system logic, architecture, and best practices, see the `memory-bank/` folder.
+
+---
+**Note:**  
+- The agent never stores email content outside of `emails_context/`.
+- All analysis and evidence must come from the files in `emails_context/`.
