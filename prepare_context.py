@@ -9,7 +9,8 @@ USAGE:
    - By default, only new emails (not yet processed) are parsed.
    - To force a full reset and re-parse all emails, run: python prepare_context.py --reset
 3. The script will create ./emails_context/ (if it doesn't exist) and write output files there, grouped by week (e.g. ./emails_context/2025,week46/).
-4. Ask the AI agent a question by referencing the generated context files in ./emails_context/.
+4. After successful processing, this version of the script will permanently delete the processed .eml files from emails_raw/ (irreversible). Be sure you want that behavior before running.
+5. Ask the AI agent a question by referencing the generated context files in ./emails_context/.
 
 Dependencies: Only standard Python libraries are used. If you encounter issues with HTML parsing, consider installing beautifulsoup4 for more robust handling.
 """
@@ -21,6 +22,7 @@ from email import policy
 from email.parser import BytesParser
 import sys
 import datetime
+import hashlib
 
 RAW_DIR = './emails_raw'
 CONTEXT_DIR = './emails_context'
@@ -79,20 +81,69 @@ def extract_body(msg):
         for part in msg.walk():
             ctype = part.get_content_type()
             if ctype == 'text/plain':
-                return part.get_content().strip()
+                try:
+                    return part.get_content().strip()
+                except Exception:
+                    payload = part.get_payload(decode=True)
+                    if payload:
+                        try:
+                            return payload.decode(errors='ignore').strip()
+                        except Exception:
+                            continue
         for part in msg.walk():
             ctype = part.get_content_type()
             if ctype == 'text/html':
-                html = part.get_content()
+                try:
+                    html = part.get_content()
+                except Exception:
+                    payload = part.get_payload(decode=True)
+                    html = payload.decode(errors='ignore') if payload else ""
                 return strip_html(html).strip()
     else:
         ctype = msg.get_content_type()
         if ctype == 'text/plain':
-            return msg.get_content().strip()
+            try:
+                return msg.get_content().strip()
+            except Exception:
+                payload = msg.get_payload(decode=True)
+                return payload.decode(errors='ignore').strip() if payload else ""
         elif ctype == 'text/html':
-            html = msg.get_content()
+            try:
+                html = msg.get_content()
+            except Exception:
+                payload = msg.get_payload(decode=True)
+                html = payload.decode(errors='ignore') if payload else ""
             return strip_html(html).strip()
     return ""
+
+def extract_attachments(msg):
+    """
+    Walk message parts and collect metadata for attachments.
+    Returns a list of dicts with keys: filename, mime_type, size, sha256
+    """
+    attachments = []
+    if not msg.is_multipart():
+        return attachments
+
+    for part in msg.walk():
+        # Determine if this part is an attachment
+        cdisp = part.get_content_disposition()
+        filename = part.get_filename()
+        if cdisp == 'attachment' or filename:
+            fname = filename if filename else "unknown"
+            mime = part.get_content_type()
+            payload = part.get_payload(decode=True)
+            if payload is None:
+                payload = b""
+            size = len(payload)
+            sha256 = hashlib.sha256(payload).hexdigest() if payload else ""
+            attachments.append({
+                'filename': fname,
+                'mime_type': mime,
+                'size': size,
+                'sha256': sha256
+            })
+    return attachments
 
 def clean_text(text):
     # Remove reply headers (e.g., "On [Date], [Sender] wrote:")
@@ -140,7 +191,7 @@ def get_year_week(date_str):
     except Exception:
         return "unknown", "week00"
 
-def write_context_file(metadata, chunks, rel_filename, year, week):
+def write_context_file(metadata, chunks, rel_filename, year, week, attachments=None):
     week_dir = os.path.join(CONTEXT_DIR, f"{year},{week}")
     if not os.path.exists(week_dir):
         os.makedirs(week_dir)
@@ -153,6 +204,14 @@ def write_context_file(metadata, chunks, rel_filename, year, week):
         f.write(f"- Sender: {metadata['Sender']}\n")
         f.write(f"- Subject: {metadata['Subject']}\n")
         f.write(f"- Date: {metadata['Date']}\n\n")
+        if attachments:
+            f.write("## Attachments\n")
+            for att in attachments:
+                f.write(f"- filename: {att.get('filename')}\n")
+                f.write(f"  - mime_type: {att.get('mime_type')}\n")
+                f.write(f"  - size: {att.get('size')}\n")
+                f.write(f"  - sha256: {att.get('sha256')}\n")
+            f.write("\n")
         f.write("## Content Chunks\n\n")
         for i, chunk in enumerate(chunks, 1):
             f.write(f"--- CHUNK {i} ---\n")
@@ -165,8 +224,9 @@ def process_eml_file(full_path, rel_filename):
     body = extract_body(msg)
     clean_body = clean_text(body)
     chunks = split_into_chunks(clean_body)
+    attachments = extract_attachments(msg)
     year, week = get_year_week(metadata['Date'])
-    write_context_file(metadata, chunks, rel_filename, year, week)
+    write_context_file(metadata, chunks, rel_filename, year, week, attachments=attachments)
 
 def main():
     ensure_directories()
@@ -200,6 +260,29 @@ def main():
             process_eml_file(full_path, rel_filename)
             print(f"Processed: {rel_filename} -> {year},{week}/")
             processed += 1
+            # Permanently delete the raw .eml after successful processing (irreversible)
+            try:
+                raw_abs = os.path.abspath(RAW_DIR)
+                full_abs = os.path.abspath(full_path)
+                # ensure the file is inside RAW_DIR for safety
+                if os.path.commonpath([raw_abs, full_abs]) == raw_abs:
+                    os.remove(full_path)
+                    # attempt to remove empty parent directories up to RAW_DIR
+                    dirpath = os.path.dirname(full_path)
+                    while True:
+                        dirpath_abs = os.path.abspath(dirpath)
+                        if dirpath_abs == raw_abs or not dirpath_abs.startswith(raw_abs):
+                            break
+                        try:
+                            os.rmdir(dirpath)
+                        except OSError:
+                            break
+                        dirpath = os.path.dirname(dirpath)
+                    print(f"Deleted raw file: {rel_filename}")
+                else:
+                    print(f"Warning: raw file {rel_filename} is outside {RAW_DIR}, not deleted.")
+            except Exception as del_err:
+                print(f"Warning: could not delete raw file {rel_filename}: {del_err}")
         except Exception as e:
             print(f"Error processing {rel_filename}: {e}")
     print(f"\nSummary: {processed} processed, {skipped} skipped.")
