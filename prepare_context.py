@@ -13,6 +13,8 @@ USAGE:
 5. Ask the AI agent a question by referencing the generated context files in ./emails_context/.
 
 Dependencies: Only standard Python libraries are used. If you encounter issues with HTML parsing, consider installing beautifulsoup4 for more robust handling.
+
+NOTE: The context file name is now generated as a progressive name per week (e.g. week46_001_context.txt, week46_002_context.txt, ...), and does NOT include the email subject or original filename.
 """
 
 import os
@@ -28,10 +30,17 @@ RAW_DIR = './emails_raw'
 CONTEXT_DIR = './emails_context'
 CHUNK_CHAR_LIMIT = 500  # Max characters per chunk
 
-def context_filename(rel_filename):
-    safe_name = rel_filename.replace(os.sep, '__')
-    base = os.path.splitext(safe_name)[0]
-    return f"{base}_context.txt"
+def context_filename(year, week):
+    """
+    Genera un nome file progressivo per la settimana.
+    Esempio: week46_001_context.txt, week46_002_context.txt, ...
+    """
+    week_dir = os.path.join(CONTEXT_DIR, f"{year},{week}")
+    if not os.path.exists(week_dir):
+        os.makedirs(week_dir)
+    existing = [f for f in os.listdir(week_dir) if f.startswith(f"{week}_") and f.endswith("_context.txt")]
+    next_num = len(existing) + 1
+    return f"{week}_{next_num:03d}_context.txt"
 
 def ensure_directories():
     if not os.path.exists(RAW_DIR):
@@ -195,7 +204,7 @@ def write_context_file(metadata, chunks, rel_filename, year, week, attachments=N
     week_dir = os.path.join(CONTEXT_DIR, f"{year},{week}")
     if not os.path.exists(week_dir):
         os.makedirs(week_dir)
-    out_filename = context_filename(rel_filename)
+    out_filename = context_filename(year, week)
     out_path = os.path.join(week_dir, out_filename)
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(f"# EMAIL CONTEXT: {rel_filename}\n\n")
@@ -250,7 +259,7 @@ def main():
         metadata = extract_metadata(msg, rel_filename)
         year, week = get_year_week(metadata['Date'])
         week_dir = os.path.join(CONTEXT_DIR, f"{year},{week}")
-        out_filename = context_filename(rel_filename)
+        out_filename = context_filename(year, week)
         out_path = os.path.join(week_dir, out_filename)
         if not reset_mode and os.path.exists(out_path):
             print(f"Skipped (already processed): {rel_filename}")
